@@ -1,0 +1,16 @@
+# Core dependencies for news-bot
+langchain>=0.1.0
+langchain-core>=0.1.0
+transformers>=4.30.0
+torch>=2.0.0
+requests>=2.25.0
+beautifulsoup4>=4.10.0
+pydantic>=2.0.0
+feedparser>=6.0.0
+
+# Optional - for RSS feed processing
+python-dateutil>=2.8.0
+
+# Development dependencies (optional)
+# pytest>=7.0.0
+# black>=22.0.0
