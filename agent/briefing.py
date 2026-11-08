@@ -1,27 +1,36 @@
 # ─────────────────────────────────────────────
 # agent/briefing.py
 # Comprehensive news briefing generator
-# Powered by Google Gemini API
+# Powered by Groq API
 # ─────────────────────────────────────────────
 
 import os
 from datetime import datetime
 from dotenv import load_dotenv
-import google.generativeai as genai
+from groq import Groq
 
 load_dotenv()
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-# Configure Gemini
-genai.configure(api_key=GEMINI_API_KEY)
+# Groq model ID. Models get deprecated often, so if this ever errors,
+# check the current list at console.groq.com/docs/models
+GROQ_MODEL = "openai/gpt-oss-120b"
 
-# Use Gemini 2.0 Flash — fast, free, strong at structured writing
-# Falls back to 1.5 Flash if 2.0 is unavailable
-try:
-    model = genai.GenerativeModel("gemini-2.0-flash")
-except Exception:
-    model = genai.GenerativeModel("gemini-1.5-flash")
+client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
+
+
+def _call_ai(prompt: str) -> str:
+    """
+    The ONE place that talks to the AI provider.
+    To switch providers later, only change this function.
+    """
+    response = client.chat.completions.create(
+        model=GROQ_MODEL,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.5,
+    )
+    return response.choices[0].message.content.strip()
 
 
 # ─────────────────────────────────────────────
@@ -30,7 +39,7 @@ except Exception:
 def _format_articles_for_prompt(articles: list) -> str:
     """
     Formats a list of article dicts into a clean numbered
-    list for the Gemini prompt. Includes title, source,
+    list for the AI prompt. Includes title, source,
     and description only — keeps token count manageable.
     """
     lines = []
@@ -44,7 +53,7 @@ def _format_articles_for_prompt(articles: list) -> str:
 
 def _build_prompt(articles: list, today: str) -> str:
     """
-    Builds the structured prompt sent to Gemini.
+    Builds the structured prompt sent to the AI.
     Instructs it to produce four distinct sections
     based on the supplied headlines.
     """
@@ -91,10 +100,10 @@ def generate_briefing(articles: list) -> dict:
         - generated_at (str) — timestamp
         - error (str) — message if failed
     """
-    if not GEMINI_API_KEY:
+    if not GROQ_API_KEY:
         return {
             "success": False,
-            "error": "GEMINI_API_KEY not found in .env file.",
+            "error": "GROQ_API_KEY not found in .env file.",
             "sections": {},
             "raw": "",
             "generated_at": "",
@@ -113,8 +122,7 @@ def generate_briefing(articles: list) -> dict:
 
     try:
         prompt   = _build_prompt(articles[:30], today)  # Cap at 30 articles
-        response = model.generate_content(prompt)
-        raw_text = response.text.strip()
+        raw_text = _call_ai(prompt)
 
         # Parse the four sections from the response
         sections = _parse_sections(raw_text)
@@ -130,7 +138,7 @@ def generate_briefing(articles: list) -> dict:
     except Exception as e:
         return {
             "success": False,
-            "error": f"Gemini API error: {str(e)}",
+            "error": f"Groq API error: {str(e)}",
             "sections": {},
             "raw": "",
             "generated_at": "",
@@ -139,7 +147,7 @@ def generate_briefing(articles: list) -> dict:
 
 def _parse_sections(raw: str) -> dict:
     """
-    Parses Gemini's response into four named sections.
+    Parses the AI's response into four named sections.
     Looks for the section headers and splits accordingly.
     Falls back gracefully if parsing fails.
     """
@@ -191,7 +199,7 @@ def _parse_sections(raw: str) -> dict:
 
 # ─────────────────────────────────────────────
 # FETCH BROAD ARTICLES FOR THE BRIEFING
-# Pulls from multiple topics to give Gemini
+# Pulls from multiple topics to give the AI
 # a wide view of current events
 # ─────────────────────────────────────────────
 def fetch_briefing_articles() -> list:
