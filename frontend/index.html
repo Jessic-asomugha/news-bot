@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PULSE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <script>
+    // Design tokens: change the palette here and it applies everywhere.
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            paper: "#F6F2EA",   // page background
+            card: "#FBF9F4",    // raised surfaces
+            ink: "#17140F",     // main text
+            muted: "#6B6458",   // secondary text
+            rule: "#E2DACB",    // hairlines
+            accent: "#C8402A",  // vermilion: links, numbers, heat
+            cool: "#2F6F73",    // calm end of the temperature scale
+          },
+          fontFamily: {
+            serif: ["Newsreader", "Georgia", "serif"],
+            sans: ["Inter", "system-ui", "sans-serif"],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { background: #F6F2EA; }
+    .kicker { font: 600 11px/1.2 Inter, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: #6B6458; }
+    .kicker b { color: #C8402A; font-weight: 600; }
+    .clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { scrollbar-width: none; }
+    .headline:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    .scale { background: linear-gradient(90deg, #2F6F73 0%, #8FA77A 35%, #E2A93B 65%, #C8402A 100%); }
+    .shimmer { background: linear-gradient(90deg, #ECE6DA 25%, #F4EFE6 50%, #ECE6DA 75%); background-size: 200% 100%; animation: sh 1.2s infinite; }
+    @keyframes sh { to { background-position: -200% 0; } }
+    .fade-in { animation: fi .35s ease-out; }
+    @keyframes fi { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    img.thumb { background: #ECE6DA; }
+  </style>
+</head>
+<body class="text-ink font-sans antialiased">
+
+  <!-- Masthead -->
+  <header class="border-b border-ink/80 bg-paper sticky top-0 z-30">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="flex items-center justify-between py-3 gap-4">
+        <a href="#/" class="flex items-baseline gap-3 shrink-0">
+          <span class="font-serif text-[28px] font-semibold tracking-tight leading-none">PULSE</span>
+          <span id="dateline" class="hidden sm:inline text-xs text-muted"></span>
+        </a>
+        <form id="searchForm" class="flex-1 max-w-sm hidden md:flex">
+          <input id="searchInput" type="search" placeholder="Search any topic…"
+                 class="w-full bg-card border border-rule rounded-full px-4 py-1.5 text-sm focus:outline-none focus:border-ink/50">
+        </form>
+        <div class="flex items-center gap-2 shrink-0">
+          <a href="#/search" class="md:hidden text-sm px-3 py-1.5 rounded-full border border-rule" aria-label="Search">Search</a>
+          <button id="openPicker" class="text-sm px-3 py-1.5 rounded-full border border-ink/80 hover:bg-ink hover:text-paper transition">Interests</button>
+        </div>
+      </div>
+      <nav id="nav" class="flex gap-6 overflow-x-auto no-scrollbar text-[13px] font-medium -mb-px"></nav>
+    </div>
+  </header>
+
+  <main id="view" class="max-w-6xl mx-auto px-4 sm:px-6 pb-24"></main>
+
+  <footer class="border-t border-rule">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6 text-xs text-muted flex flex-wrap gap-x-6 gap-y-2 justify-between">
+      <span>PULSE · news from 39 outlets across Nigeria, Africa and the world</span>
+      <span>Summaries and the World Temperature are written by AI and can make mistakes.</span>
+    </div>
+  </footer>
+
+  <!-- Interest picker -->
+  <div id="picker" class="fixed inset-0 z-40 hidden">
+    <div class="absolute inset-0 bg-ink/40"></div>
+    <div class="relative max-w-2xl mx-auto mt-6 sm:mt-16 mx-4 sm:mx-auto bg-paper rounded-2xl shadow-xl max-h-[88vh] overflow-y-auto">
+      <div class="p-6 sm:p-8">
+        <p class="kicker">Make it yours</p>
+        <h2 class="font-serif text-3xl mt-1">What do you want to follow?</h2>
+        <p class="text-sm text-muted mt-2">Tap in order of importance. Your first pick rises highest. Nothing else is hidden; it just moves down.</p>
+        <div id="presetGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-5"></div>
+        <form id="customForm" class="mt-5 flex gap-2">
+          <input id="customInput" placeholder="Add your own: e.g. sea turtles, Nollywood, fintech in Kenya"
+                 class="flex-1 bg-card border border-rule rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-ink/50">
+          <button class="px-4 py-2 text-sm rounded-lg bg-ink text-paper">Add</button>
+        </form>
+        <div id="chosen" class="flex flex-wrap gap-2 mt-4"></div>
+        <div class="mt-6 flex flex-wrap items-center gap-3 border-t border-rule pt-5">
+          <label class="text-sm text-muted" for="countrySelect">Your country</label>
+          <select id="countrySelect" class="bg-card border border-rule rounded-lg px-3 py-2 text-sm"></select>
+          <div class="flex-1"></div>
+          <button id="savePicker" class="px-5 py-2.5 rounded-full bg-accent text-white text-sm font-medium hover:opacity-90">Show my news</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
